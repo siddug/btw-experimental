@@ -29,6 +29,9 @@ import {
   publishNote,
   publishNoteSuccess,
   publishNoteFailure,
+  makeNotePrivate,
+  makeNotePrivateSuccess,
+  makeNotePrivateFailure,
   archiveNote,
   archiveNoteSuccess,
   archiveNoteFailure,
@@ -78,6 +81,10 @@ export const actionState = {
     status: STATUS.IDLE,
     data: null,
   },
+  makeNotePrivate: {
+    status: STATUS.IDLE,
+    data: null,
+  },
 };
 
 export default {
@@ -113,6 +120,7 @@ export default {
               updated_at,
               archive,
               publish,
+              private: privated,
               delete: deletedAs,
               deleted_at,
               slug,
@@ -147,6 +155,7 @@ export default {
               md,
               archive,
               publish,
+              private: privated,
               deleted: deletedAs,
               deleted_at,
               slug,
@@ -285,6 +294,7 @@ export default {
           ? new Date(payload.published_at).getTime()
           : null;
         draft.notesMap[payload.id].publish = payload.publish;
+        draft.notesMap[payload.id].private = payload.private;
         draft.notesMap[payload.id].archive = payload.archive;
         draft.notesMap[payload.id].delete = payload.delete;
         draft.notesMap[payload.id].deleted_at = payload.deleted_at
@@ -412,6 +422,20 @@ export default {
       .addCase(publishNoteFailure, (draft, { payload }) => {
         draft.publishNote.status = STATUS.ERROR;
         draft.publishNote.error = payload.error;
+      });
+
+    builder
+      .addCase(makeNotePrivate, (draft) => {
+        draft.makeNotePrivate.status = STATUS.RUNNING;
+        draft.makeNotePrivate.error = null;
+      })
+      .addCase(makeNotePrivateSuccess, (draft, { payload }) => {
+        draft.makeNotePrivate.status = STATUS.SUCCESS;
+        draft.makeNotePrivate.error = null;
+      })
+      .addCase(makeNotePrivateFailure, (draft, { payload }) => {
+        draft.makeNotePrivate.status = STATUS.ERROR;
+        draft.makeNotePrivate.error = payload.error;
       });
 
     builder

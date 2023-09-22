@@ -10,6 +10,7 @@ import { selectUser, selectOtp } from "../selectors";
 import { addCustomDomain, updateUser } from "../actions";
 import useTreeChanges from "tree-changes-hook";
 import Tiptap from "../components/Tiptap";
+import { Switch } from "@headlessui/react";
 
 import AppWrapper from "./AppWraper";
 
@@ -24,10 +25,12 @@ function SettingsContainer(props) {
     ""
   );
 
+  const isUserPro = !!(user.data || {}).pro;
   const currentName = (user.data || {}).name || "";
   const currentSlug = (user.data || {}).slug || "";
   const currentBio = (user.data || {}).bio || "";
   const currentPic = (user.data || {}).pic || "";
+  const currentSettings = (user.data || {}).settings || {};
   const currentLinkedin = (user.data || {}).linkedin || "";
   const currentTwitter = (user.data || {}).twitter || "";
   const currentInstagram = (user.data || {}).instagram || "";
@@ -46,6 +49,12 @@ function SettingsContainer(props) {
   const [twitter, setTwitter] = useState(currentTwitter);
   const [instagram, setInstagram] = useState(currentInstagram);
   const bioRef = useRef(null);
+  const [settings, setSettings] = useState({
+    ...currentSettings,
+    ...{
+      links: [...(currentSettings.links || []), { name: "", url: "" }],
+    },
+  });
 
   useEffect(() => {
     if (changed("user.data.name")) {
@@ -107,7 +116,13 @@ function SettingsContainer(props) {
     pic !== currentPic ||
     linkedin !== currentLinkedin ||
     twitter !== currentTwitter ||
-    instagram !== currentInstagram;
+    instagram !== currentInstagram ||
+    settings.removeImagesInMainPage !==
+      currentSettings.removeImagesInMainPage ||
+    JSON.stringify((settings.links || []).filter((x) => x.name || x.url)) !==
+      JSON.stringify(
+        (currentSettings.links || []).filter((x) => x.name || x.url)
+      );
 
   return (
     <AppWrapper {...props} settingsPage={true}>
@@ -267,6 +282,116 @@ function SettingsContainer(props) {
                 </div>
               </div>
             </div>
+            {isUserPro ? (
+              <div className="mb-4 max-w-lg">
+                <label className="block font-bold mb-2" htmlFor="pic">
+                  Site settings
+                </label>
+                <div className="">
+                  <Switch.Group as="div" className="flex items-center">
+                    <Switch
+                      checked={settings.removeImagesInMainPage}
+                      onChange={() => {
+                        setSettings({
+                          ...settings,
+                          removeImagesInMainPage:
+                            !settings.removeImagesInMainPage,
+                        });
+                      }}
+                      className={`${
+                        settings.removeImagesInMainPage
+                          ? "bg-blue-600"
+                          : "bg-gray-200"
+                      } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`${
+                          settings.removeImagesInMainPage
+                            ? "translate-x-5"
+                            : "translate-x-0"
+                        } mt-0.5 ml-0.5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                      />
+                    </Switch>
+                    <Switch.Label as="span" className="ml-1.5 text-sm">
+                      <span className="font-medium text-gray-900">
+                        Remove images from main page
+                      </span>
+                    </Switch.Label>
+                  </Switch.Group>
+                </div>
+              </div>
+            ) : null}
+
+            {isUserPro ? (
+              <div className="mb-4 max-w-lg">
+                <label className="block font-bold mb-2" htmlFor="slug">
+                  Links
+                </label>
+                <div className="flex flex-col space-y-2">
+                  {(settings.links || []).map(({ name, url }, i) => {
+                    return (
+                      <div key={i} className="flex items-center space-x-2">
+                        <input
+                          className="shadow appearance-none border rounded w-full py-2 px-3 text-sm text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                          type="text"
+                          placeholder="Name"
+                          value={name}
+                          onChange={(e) => {
+                            setSettings({
+                              ...settings,
+                              links: [
+                                ...settings.links.map((link, j) => {
+                                  if (j === i) {
+                                    return {
+                                      ...link,
+                                      name: e.target.value,
+                                    };
+                                  }
+
+                                  return link;
+                                }),
+                                ...(i === settings.links.length - 1
+                                  ? [
+                                      {
+                                        name: "",
+                                        url: "",
+                                      },
+                                    ]
+                                  : []),
+                              ],
+                            });
+                          }}
+                        />
+                        <span>⇢</span>
+                        <input
+                          className="shadow appearance-none border rounded w-full py-2 px-3 text-sm text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                          type="text"
+                          placeholder="URL"
+                          value={url}
+                          onChange={(e) => {
+                            setSettings({
+                              ...settings,
+                              links: settings.links.map((link, j) => {
+                                if (j === i) {
+                                  return {
+                                    ...link,
+                                    url: e.target.value,
+                                  };
+                                }
+
+                                return link;
+                              }),
+                            });
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
             <div className="flex mt-2 items-center justify-between">
               <button
                 className={`flex items-center bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-sm ${
@@ -278,15 +403,7 @@ function SettingsContainer(props) {
                     return;
                   }
 
-                  if (
-                    name === currentName &&
-                    slug === currentSlug &&
-                    bio === currentBio &&
-                    pic === currentPic &&
-                    linkedin === currentLinkedin &&
-                    twitter === currentTwitter &&
-                    instagram === currentInstagram
-                  ) {
+                  if (!activeUpdateButton) {
                     return;
                   }
 
@@ -300,6 +417,12 @@ function SettingsContainer(props) {
                       linkedin,
                       twitter,
                       instagram,
+                      settings: {
+                        ...settings,
+                        links: settings.links.filter(
+                          (link) => link.name && link.url
+                        ),
+                      },
                     })
                   );
                 }}

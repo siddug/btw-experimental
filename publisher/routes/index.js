@@ -66,6 +66,7 @@ const getCommonDeets = (
     instagram: user.instagram,
     umami_site_id: user.umami_site_id,
     umami_src: process.env.UMAMI_SOURCE,
+    settings: user.settings,
   };
 };
 
@@ -173,13 +174,15 @@ router.get("/", async (req, res, next) => {
 
   // convert notes into yearly buckets
   let notesByYear = {};
-  notes.forEach((note) => {
-    const year = new Date(note.published_at).getFullYear();
-    if (!notesByYear[year]) {
-      notesByYear[year] = [];
-    }
-    notesByYear[year].push(note);
-  });
+  notes
+    .filter((x) => !x.private)
+    .forEach((note) => {
+      const year = new Date(note.published_at).getFullYear();
+      if (!notesByYear[year]) {
+        notesByYear[year] = [];
+      }
+      notesByYear[year].push(note);
+    });
 
   res.render("index", {
     notes: Object.keys(notesByYear)

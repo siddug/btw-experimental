@@ -252,7 +252,7 @@ async function getNotes({ user_id, page, limit, after = 0 }) {
     limit = Number(limit);
     after = new Date(after);
     const { rows } = await pool.query(
-        `SELECT id, user_id, title, md, created_at, updated_at, published_at, publish, slug, ydoc, delete, archive, deleted_at FROM btw.notes WHERE user_id = $1 AND (created_at >=$2 OR updated_at >= $3) ORDER BY updated_at DESC LIMIT $4 OFFSET $5`,
+        `SELECT id, user_id, title, md, created_at, updated_at, published_at, publish, private, slug, ydoc, delete, archive, deleted_at FROM btw.notes WHERE user_id = $1 AND (created_at >=$2 OR updated_at >= $3) ORDER BY updated_at DESC LIMIT $4 OFFSET $5`,
         [user_id, after, after, limit, (page - 1) * limit]
     );
 
@@ -377,6 +377,39 @@ async function setNoteSlug({ user_id, id, slug }) {
     };
 }
 
+async function makeNotePrivate({ user_id, id }) {
+    // set private to true
+
+    const pool = await db.getTasksDB();
+
+    await pool.query(
+        `UPDATE btw.notes SET private = true WHERE id = $1 AND user_id = $2`,
+        [id, user_id]
+    );
+
+    noteCacheHelper(user_id);
+
+    return {
+        success: true,
+    };
+}
+
+async function makeNotePublic({ user_id, id }) {
+    // set private to false
+    const pool = await db.getTasksDB();
+
+    await pool.query(
+        `UPDATE btw.notes SET private = false WHERE id = $1 AND user_id = $2`,
+        [id, user_id]
+    );
+
+    noteCacheHelper(user_id);
+
+    return {
+        success: true,
+    };
+}
+
 async function publishNote({ user_id, id }) {
     // get the note from db
     // create slug for it
@@ -489,6 +522,8 @@ module.exports = {
     importNote,
     unpublishNote,
     publishNote,
+    makeNotePrivate,
+    makeNotePublic,
     deleteNote,
     undeleteNote,
     archiveNote,

@@ -182,6 +182,7 @@ router.post(
             twitter,
             linkedin,
             instagram,
+            settings,
         } = req.body || {};
 
         // get loginToken as btw_uuid cookie
@@ -203,6 +204,7 @@ router.post(
                     twitter,
                     linkedin,
                     instagram,
+                    settings,
                 })
             );
         } catch (e) {
