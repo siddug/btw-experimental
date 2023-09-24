@@ -264,7 +264,7 @@ async function getNotes({ user_id, page, limit, after = 0 }) {
 
     return {
         notes: rows,
-        total: totalRows.length > 0 ? totalRows[0].count : 0,
+        total: Number(totalRows.length > 0 ? totalRows[0].count : 0),
         page,
         limit,
     };
