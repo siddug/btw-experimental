@@ -81,7 +81,7 @@ router.get("/sitemap.xml", async (req, res, next) => {
     return;
   }
 
-  const notes = JSON.parse(
+  let notes = JSON.parse(
     JSON.stringify(
       await getAllNotes({
         slug: res.locals.domainSlug,
