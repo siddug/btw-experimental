@@ -81,10 +81,14 @@ router.get("/sitemap.xml", async (req, res, next) => {
     return;
   }
 
-  const notes = await getAllNotes({
-    slug: res.locals.domainSlug,
-    customDomain: res.locals.customDomain,
-  });
+  const notes = JSON.parse(
+    JSON.stringify(
+      await getAllNotes({
+        slug: res.locals.domainSlug,
+        customDomain: res.locals.customDomain,
+      })
+    )
+  );
 
   if (notes) {
     notes = notes.filter((note) => !!note.private);
@@ -268,10 +272,14 @@ router.get("/about", async (req, res, next) => {
     return;
   }
 
-  const notes = await getAllNotes({
-    slug: res.locals.domainSlug,
-    customDomain: res.locals.customDomain,
-  });
+  const notes = JSON.parse(
+    JSON.stringify(
+      await getAllNotes({
+        slug: res.locals.domainSlug,
+        customDomain: res.locals.customDomain,
+      })
+    )
+  );
 
   if (notes) {
     notes.map((note) => {
