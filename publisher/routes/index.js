@@ -87,6 +87,7 @@ router.get("/sitemap.xml", async (req, res, next) => {
   });
 
   if (notes) {
+    notes = notes.filter((note) => !!note.private);
     notes.map((note) => {
       note.url = createSubUrlWithPath(res, `/${note.slug}`);
     });
